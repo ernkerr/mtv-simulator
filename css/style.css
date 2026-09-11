@@ -1,6 +1,6 @@
 /* =========================================================
    MTV — Music Television Simulator
-   A big black 90s set in a dark room lit by loud MTV colour.
+   A big black 90s set in a dark room.
    ========================================================= */
 
 :root {
@@ -42,21 +42,13 @@ body {
 .skip-link { position: absolute; left: -9999px; }
 .skip-link:focus { left: 8px; top: 8px; background: #000; padding: 6px 10px; z-index: 100; }
 
-/* ---------- the room: dark, with colour washes like a 90s ident ---------- */
+/* ---------- the room: dark, quiet, lit mostly by the set ---------- */
 .wall {
   position: fixed; inset: 0; z-index: 0;
   background:
-    radial-gradient(700px 520px at 8% 12%, rgba(255,62,165,.28), transparent 65%),
-    radial-gradient(760px 560px at 94% 22%, rgba(46,230,255,.22), transparent 65%),
-    radial-gradient(900px 480px at 50% 108%, rgba(182,255,59,.16), transparent 60%),
-    radial-gradient(520px 420px at 78% 92%, rgba(123,63,255,.22), transparent 65%),
+    radial-gradient(1100px 700px at 50% 42%, #1c1c21, transparent 70%),
+    radial-gradient(1400px 900px at 50% 110%, #0f0f12, transparent 60%),
     var(--room);
-}
-.wall::after {
-  /* halftone dots, very faint: print-era MTV */
-  content: ""; position: absolute; inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.06) 0 1px, transparent 1.6px) 0 0 / 7px 7px;
-  mix-blend-mode: overlay;
 }
 .floor {
   position: fixed; left: 0; right: 0; bottom: 0; height: 22vh; z-index: 0;
