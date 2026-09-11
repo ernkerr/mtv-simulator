@@ -42,10 +42,21 @@ python3 -m http.server 8000
 
 Add `?mock=1` to the URL to run with a fake player (no YouTube) when you're working on the UI offline.
 
+### Moving it into its own repository
+
+This folder was built inside the `ernkerr/ernkerr` repo. To give it its own repo (say `ernkerr/mtv-simulator`), create an empty repo on GitHub, then from the root of this repo:
+
+```sh
+git subtree split --prefix=mtv-simulator -b mtv-simulator-main
+git push git@github.com:ernkerr/mtv-simulator.git mtv-simulator-main:main
+```
+
+That keeps the history and puts `index.html` at the root of the new repo, which is what the Pages workflow expects.
+
 ### Deploying
 
-- **GitHub Pages:** the included workflow in `.github/workflows/pages.yml` publishes the repo root. Enable Pages with source *GitHub Actions* in the repo settings.
-- **Vercel / Netlify / anything:** point it at this folder. There is no build command.
+- **GitHub Pages:** the included workflow in `.github/workflows/pages.yml` publishes the repo root. In the new repo go to *Settings → Pages* and set the source to *GitHub Actions*. The site will be at `https://ernkerr.github.io/mtv-simulator/`.
+- **Vercel / Netlify / anything:** point it at this folder. Framework: none, no build command, output directory: `.` (or `mtv-simulator` if you deploy from the profile repo).
 
 ## How the taste model works
 
