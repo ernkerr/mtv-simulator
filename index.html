@@ -5,11 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MTV — Music Television Simulator</title>
   <meta name="description" content="A big boxy console TV that only gets music channels. Flip around, check the guide, and it learns your taste.">
-  <meta name="theme-color" content="#1a0d0a">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='8' width='60' height='46' rx='3' fill='%235a3218'/%3E%3Crect x='8' y='14' width='36' height='32' rx='4' fill='%2333dd55'/%3E%3Ccircle cx='53' cy='24' r='5' fill='%23111'/%3E%3Ccircle cx='53' cy='38' r='4' fill='%23111'/%3E%3C/svg%3E">
+  <meta name="theme-color" content="#09090b">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='8' width='60' height='48' rx='6' fill='%231c1c1f'/%3E%3Crect x='8' y='13' width='48' height='34' rx='5' fill='%23b6ff3b'/%3E%3Ccircle cx='52' cy='51' r='2' fill='%2333dd55'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Anton&family=Permanent+Marker&family=Righteous&family=Josefin+Sans:wght@700&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Anton&family=Permanent+Marker&family=Josefin+Sans:wght@700&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-tv="off">
@@ -23,17 +23,16 @@
 
   <header class="topbar">
     <div class="wordmark" aria-label="MTV"><span class="wordmark-m">M</span><span class="wordmark-tv">tv</span></div>
-    <button type="button" class="manual-btn" id="manualBtn" aria-expanded="false" aria-controls="manual">? MANUAL</button>
+    <button type="button" class="manual-btn" id="manualBtn" aria-expanded="false" aria-controls="manual">?</button>
   </header>
 
   <main class="room">
     <!-- ===== THE TELEVISION ===== -->
     <section class="tv" aria-label="Television">
-      <div class="cabinet">
-        <div class="cabinet-top"></div>
+      <div class="set">
+        <div class="set-face">
+          <div class="speaker" aria-hidden="true"></div>
 
-        <div class="cabinet-face">
-          <!-- picture tube -->
           <div class="bezel">
             <div class="screen" id="screen" data-state="off">
               <div class="screen-inner">
@@ -103,50 +102,43 @@
             </div>
           </div>
 
-          <!-- control column -->
-          <div class="panel">
-            <div class="badge"><span class="badge-name">Boogievision</span><span class="badge-line">SOLID STATE &middot; COLOR</span></div>
-
-            <div class="dial-wrap">
-              <div class="dial-label">CHANNEL</div>
-              <div class="dial dial-channel" id="channelDial" role="slider" aria-label="Channel dial" aria-valuemin="1" aria-valuemax="10" aria-valuenow="1" tabindex="0" title="Click to turn up, shift-click to turn down, or scroll">
-                <div class="dial-ticks" id="channelTicks"></div>
-                <div class="knob" id="channelKnob"><i class="knob-pointer"></i></div>
-              </div>
-            </div>
-
-            <div class="dial-wrap dial-wrap-small">
-              <div class="dial-label">VOLUME</div>
-              <div class="dial dial-volume" id="volumeDial" role="slider" aria-label="Volume dial" aria-valuemin="0" aria-valuemax="100" aria-valuenow="70" tabindex="0" title="Click to turn up, shift-click to turn down, or scroll">
-                <div class="knob knob-small" id="volumeKnob"><i class="knob-pointer"></i></div>
-              </div>
-            </div>
-
-            <div class="trim-row" aria-hidden="true">
-              <span class="trim"><i></i><b>BRIGHT</b></span>
-              <span class="trim"><i></i><b>COLOR</b></span>
-              <span class="trim"><i></i><b>TINT</b></span>
-            </div>
-
-            <div class="power-row">
-              <span class="jewel" id="led"></span>
-              <button type="button" class="push power-push" data-action="power" aria-label="Power">POWER</button>
-            </div>
-
-            <div class="grille" aria-hidden="true"></div>
-          </div>
+          <div class="speaker" aria-hidden="true"></div>
         </div>
 
-        <div class="cabinet-base"></div>
+        <!-- the strip of little buttons every 90s set had along the bottom -->
+        <div class="set-bottom">
+          <div class="brandplate">TRINITONE <small>FD</small></div>
+          <div class="set-status">
+            <span class="ir-window" aria-hidden="true"></span>
+            <span class="led" id="led"></span>
+          </div>
+          <div class="set-buttons">
+            <button type="button" class="push" data-action="power" aria-label="Power">POWER</button>
+            <button type="button" class="push" data-action="chdown" aria-label="Channel down">CH −</button>
+            <button type="button" class="push" data-action="chup" aria-label="Channel up">CH +</button>
+            <button type="button" class="push" data-action="voldown" aria-label="Volume down">VOL −</button>
+            <button type="button" class="push" data-action="volup" aria-label="Volume up">VOL +</button>
+            <button type="button" class="push" data-action="guide" aria-label="Menu">MENU</button>
+          </div>
+        </div>
       </div>
-      <div class="legs" aria-hidden="true"><span></span><span></span></div>
+
+      <!-- the stand, with the VCR nobody ever set the clock on -->
+      <div class="stand" aria-hidden="true">
+        <div class="vcr">
+          <span class="vcr-brand">HI-FI STEREO · VHS</span>
+          <span class="vcr-slot"></span>
+          <span class="vcr-clock">12:00</span>
+          <span class="vcr-buttons"><i></i><i></i><i></i><i></i></span>
+        </div>
+      </div>
     </section>
 
     <!-- ===== THE REMOTE ===== -->
     <section class="remote" id="remote" aria-label="Remote control">
       <div class="remote-top">
         <button type="button" class="rbtn rbtn-power" data-action="power" data-key="p" title="Power (P)">⏻</button>
-        <span class="remote-brand">Boogievision</span>
+        <span class="remote-brand">RM-V90</span>
         <button type="button" class="rbtn rbtn-small" data-action="mute" data-key="m" title="Mute (M)">MUTE</button>
       </div>
 
@@ -192,16 +184,16 @@
   <div class="manual" id="manual" hidden>
     <div class="manual-card" role="dialog" aria-modal="true" aria-labelledby="manualTitle">
       <button type="button" class="manual-close" id="manualClose" aria-label="Close">×</button>
-      <h2 id="manualTitle">Owner's Manual</h2>
-      <p class="manual-lede">A console television that only gets music channels. Turn it on, flip around, and leave it on. It pays attention.</p>
+      <h2 id="manualTitle">How this works</h2>
+      <p class="manual-lede">A TV that only gets music channels. Turn it on, flip around, leave it on. It pays attention.</p>
 
       <h3>Controls</h3>
       <table class="manual-table">
-        <tr><td>Power</td><td><kbd>P</kbd> or the POWER button on the set</td></tr>
-        <tr><td>Channel up / down</td><td><kbd>↑</kbd> <kbd>↓</kbd>, the CH rocker, or turn the CHANNEL dial (click, shift-click, or scroll)</td></tr>
+        <tr><td>Power</td><td><kbd>P</kbd>, or POWER on the set</td></tr>
+        <tr><td>Channel up / down</td><td><kbd>↑</kbd> <kbd>↓</kbd>, the CH rocker, or the buttons on the set</td></tr>
         <tr><td>Tune directly</td><td><kbd>0</kbd>–<kbd>9</kbd> (two digits, or wait a beat)</td></tr>
         <tr><td>Last channel</td><td><kbd>L</kbd></td></tr>
-        <tr><td>Volume / mute</td><td><kbd>→</kbd> <kbd>←</kbd> / <kbd>M</kbd>, or the VOLUME dial</td></tr>
+        <tr><td>Volume / mute</td><td><kbd>→</kbd> <kbd>←</kbd> / <kbd>M</kbd></td></tr>
         <tr><td>Guide</td><td><kbd>G</kbd>. Browse with <kbd>↑</kbd> <kbd>↓</kbd>, tune with <kbd>Enter</kbd>, switch tabs with <kbd>←</kbd> <kbd>→</kbd></td></tr>
         <tr><td>Info</td><td><kbd>I</kbd> or <kbd>Enter</kbd> brings the title card back</td></tr>
         <tr><td>Love / Nope</td><td><kbd>F</kbd> / <kbd>X</kbd></td></tr>

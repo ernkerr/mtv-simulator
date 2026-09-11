@@ -1,6 +1,6 @@
 # 📺 MTV — Music Television Simulator
 
-A big boxy wood-console TV in a warm living room that only gets music channels. Turn the dial, check the guide, and it quietly learns what you like.
+A big black 90s TV in a dark room that only gets music channels. Flip around, check the guide, and it quietly learns what you like.
 
 No build step, no framework, no backend. Three JavaScript files and a stylesheet. Videos stream from YouTube through the official embed API.
 
@@ -11,25 +11,25 @@ No build step, no framework, no backend. Three JavaScript files and a stylesheet
 - **It learns from how you surf.** Bailing on a video in the first few seconds is a no. Sticking around, or watching to the end, is a yes. `LOVE` and `NOPE` on the remote are loud votes. Every other channel reorders its upcoming picks around what it has learned, but keeps its genre.
 - **A Prevue-style guide.** `GUIDE` shows the blue grid with NOW / NEXT for every channel, a clock, a ticker, and a *YOUR TASTE* tab with what the TV thinks it knows about you.
 - **The real title card.** A few seconds into every video, the four-line card cuts in bottom-left the way MTV ran it: artist, the song in quotes, the album, the record label, in white Kabel-style type with a hard black shadow. It fades out, then comes back for the last few seconds. (Kabel itself is a commercial font; the site uses Josefin Sans, the closest free face, with Kabel as the first fallback if you have it installed.)
-- **It feels like a real set.** A wood cabinet with a CHANNEL dial that notches over with a clunk, a VOLUME knob, a POWER push-button and a jewel light. The remote's rubber buttons lift on hover and push down when you click, with a clack on the way down and back up. Keyboard shortcuts press the matching remote button. Static between channels, scanlines, glass glare, a lower-third title card at the start and end of every video, and the tube throws light on the room.
+- **It feels like a real set.** A big black 90s tube with speaker grilles down both sides, a strip of little push-buttons along the bottom (POWER, CH, VOL, MENU) with a red standby light, and a VCR underneath still blinking 12:00. The remote's rubber buttons lift on hover and push down when you click, with a clack on the way down and back up; keyboard shortcuts press the matching remote button. Static between channels, scanlines, glass glare, an on-screen channel number and volume bar, and the tube throws shifting light into the room.
 - **Private by design.** Everything it learns lives in `localStorage` in your browser. Nothing is sent anywhere. "Reset what it has learned" at the bottom of the page wipes it.
 
 ## Controls
 
 | Remote | Keyboard | Does |
 | --- | --- | --- |
-| ⏻ | `P` | Power (also the POWER button on the set) |
-| CH ▲ / ▼ | `↑` / `↓` | Channel up / down (or turn the CHANNEL dial: click, shift-click, or scroll) |
+| ⏻ | `P` | Power (or POWER on the set) |
+| CH ▲ / ▼ | `↑` / `↓` | Channel up / down (or the CH buttons on the set) |
 | 0–9 | `0`–`9` | Tune directly (two digits, or wait a second) |
 | LAST | `L` | Previous channel |
-| VOL + / − | `→` / `←` | Volume (or turn the VOLUME dial) |
+| VOL + / − | `→` / `←` | Volume (or the VOL buttons on the set) |
 | MUTE | `M` | Mute |
 | GUIDE | `G` | Open / close the guide (↑↓ to browse, Enter to tune, ←→ to switch tabs) |
 | INFO | `I` or `Enter` | Show the channel and the title card again |
 | ♥ LOVE | `F` | Strong yes for this video |
 | ✕ NOPE | `X` | Strong no; the channel moves on |
 | | `T` | Jump straight to the *YOUR TASTE* tab |
-| | `?` | Open the owner's manual |
+| | `?` | Open the help card |
 
 On a phone: swipe up or down on the screen to change channels, tap it for info.
 

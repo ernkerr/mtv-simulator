@@ -206,29 +206,9 @@
     osdVolume: $('osdVolume'), osdVolBar: $('osdVolBar'), osdMute: $('osdMute'), osdLearn: $('osdLearn'),
     guide: $('guide'), guideGrid: $('guideGrid'), guideClock: $('guideClock'), guideNow: $('guideNow'), guideTicker: $('guideTicker'),
     tastePanel: $('tastePanel'), led: $('led'), videoLayer: $('videoLayer'),
-    channelDial: $('channelDial'), channelKnob: $('channelKnob'), channelTicks: $('channelTicks'),
-    volumeDial: $('volumeDial'), volumeKnob: $('volumeKnob'), manual: $('manual'), manualBtn: $('manualBtn'),
+    manual: $('manual'), manualBtn: $('manualBtn'),
   };
 
-  // ---------- the dials on the set ----------
-  const DIAL_START = -162; // degrees: channel 1 sits upper-left, channel 10 upper-right
-  const DIAL_STEP = 36;
-  function buildTicks() {
-    el.channelTicks.innerHTML = CHANNELS.map((ch, i) => {
-      const a = DIAL_START + i * DIAL_STEP;
-      return `<span class="tick" data-num="${ch.num}" style="transform: rotate(${a}deg)"><i></i><b style="transform: translate(-50%, -50%) rotate(${-a}deg)">${ch.num}</b></span>`;
-    }).join('');
-  }
-  function updateDials() {
-    const ch = byNum(S.channel);
-    const idx = ch ? CHANNELS.indexOf(ch) : -1;
-    const angle = idx >= 0 ? DIAL_START + idx * DIAL_STEP : DIAL_START - 18; // off the end for a dead channel
-    el.channelKnob.style.transform = `rotate(${angle}deg)`;
-    el.channelDial.setAttribute('aria-valuenow', S.channel);
-    el.channelTicks.querySelectorAll('.tick').forEach(t => t.classList.toggle('is-on', +t.dataset.num === S.channel));
-    el.volumeKnob.style.transform = `rotate(${-135 + S.volume / 100 * 270}deg)`;
-    el.volumeDial.setAttribute('aria-valuenow', S.volume);
-  }
 
   // ---------- snow ----------
   const snowCtx = el.snow.getContext('2d');
@@ -326,7 +306,7 @@
       if (S.power) return;
       S.power = true;
       SFX.resume(); SFX.powerOn();
-      el.led.className = 'jewel on';
+      el.led.className = 'led on';
       el.screen.classList.remove('is-powering-off');
       el.screen.classList.add('is-powering-on');
       setTimeout(() => el.screen.classList.remove('is-powering-on'), 600);
@@ -347,7 +327,7 @@
       if (S.guideOpen) App.closeGuide();
       SFX.powerOff();
       Player.stop();
-      el.led.className = 'jewel standby';
+      el.led.className = 'led standby';
       el.lt.hidden = true; el.bug.hidden = true; el.osdChannel.hidden = true; el.osdVolume.hidden = true; el.osdMute.hidden = true; el.osdLearn.hidden = true; el.nosignal.hidden = true;
       el.screen.classList.add('is-powering-off');
       setTimeout(() => { setScreenState('off'); el.screen.classList.remove('is-powering-off'); }, 460);
@@ -361,8 +341,6 @@
       App.endWatch(false);
       if (!ch) {
         S.channel = num;
-        updateDials();
-        SFX.clunk();
         showChannelOSD(String(num).padStart(2, '0'), '');
         App.noSignal('');
         SFX.hiss(0.5, 0.4);
@@ -374,9 +352,8 @@
       el.nosignal.hidden = true;
       clearTimeout(timers.ltDelay);
 
-      updateDials();
-      // the dial notches over, then a burst of static between channels
-      if (!opts.silent) { SFX.clunk(); SFX.hiss(0.32, 0.35); }
+      // a burst of static between channels
+      if (!opts.silent) SFX.hiss(0.32, 0.35);
       setScreenState('static');
       el.lt.hidden = true; el.bug.hidden = true;
       showChannelOSD(String(ch.num).padStart(2, '0'), ch.name);
@@ -491,7 +468,7 @@
       S.volume = Math.max(0, Math.min(100, S.volume + delta));
       if (S.muted && delta > 0) { S.muted = false; el.osdMute.hidden = true; }
       SFX.setVolume(0.15 + S.volume / 100 * 0.6);
-      Player.applyVolume(); saveState(); showVolumeOSD(); updateDials(); SFX.blip(delta > 0);
+      Player.applyVolume(); saveState(); showVolumeOSD(); SFX.blip(delta > 0);
     },
     toggleMute() {
       if (!S.power) return;
@@ -667,23 +644,6 @@
     setTimeout(() => { b.classList.remove('is-pressed'); SFX.release(); }, 110);
   }
 
-  // The dials: click to turn up, shift-click (or right-click) to turn down, scroll either way.
-  function dialTurn(dialEl, up, down) {
-    dialEl.addEventListener('click', (e) => { SFX.resume(); (e.shiftKey ? down : up)(); dialEl.blur(); });
-    dialEl.addEventListener('contextmenu', (e) => { e.preventDefault(); SFX.resume(); down(); });
-    let last = 0;
-    dialEl.addEventListener('wheel', (e) => {
-      e.preventDefault();
-      const now = Date.now(); if (now - last < 160) return; last = now;
-      SFX.resume(); (e.deltaY < 0 ? up : down)();
-    }, { passive: false });
-    dialEl.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); up(); }
-      if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); down(); }
-    });
-  }
-  dialTurn(el.channelDial, () => { if (S.power) App.channelUp(); else App.powerOn(); }, () => { if (S.power) App.channelDown(); else App.powerOn(); });
-  dialTurn(el.volumeDial, () => App.volume(5), () => App.volume(-5));
 
   // The owner's manual
   function openManual() { el.manual.hidden = false; el.manualBtn.setAttribute('aria-expanded', 'true'); }
@@ -747,10 +707,8 @@
   // ---------- boot ----------
   loadState();
   initSchedule();
-  buildTicks();
-  updateDials();
   SFX.setVolume(0.15 + S.volume / 100 * 0.6);
-  el.led.className = 'jewel standby';
+  el.led.className = 'led standby';
   setScreenState('off');
   el.nosignalSub.textContent = '';
   // an "off" tube shows a faint reflection and a hint
