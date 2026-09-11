@@ -46,16 +46,39 @@
     src.start(t); src.stop(t + duration + 0.05);
   }
 
-  function click() {
+  // A short filtered noise burst with a pitched tick: the clack of a rubber button on a plastic dome.
+  function tick(freq, level, dur) {
     const c = ensure(); if (!c) return;
-    const o = c.createOscillator();
-    o.type = 'square'; o.frequency.value = 1800;
-    const g = c.createGain();
     const t = c.currentTime;
-    g.gain.setValueAtTime(0.12, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
-    o.connect(g).connect(master);
-    o.start(t); o.stop(t + 0.05);
+    const o = c.createOscillator();
+    o.type = 'square'; o.frequency.setValueAtTime(freq, t); o.frequency.exponentialRampToValueAtTime(freq * 0.5, t + dur);
+    const g = c.createGain();
+    g.gain.setValueAtTime(level, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(master); o.start(t); o.stop(t + dur + 0.01);
+    const n = c.createBufferSource(); n.buffer = noiseBuffer;
+    const f = c.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = 2500;
+    const ng = c.createGain();
+    ng.gain.setValueAtTime(level * 0.9, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + dur * 0.8);
+    n.connect(f).connect(ng).connect(master); n.start(t); n.stop(t + dur);
+  }
+  function press() { tick(2200, 0.16, 0.035); }     // button goes down
+  function release() { tick(1400, 0.09, 0.03); }    // button comes back up
+  function click() { press(); setTimeout(release, 70); }
+
+  // The heavy mechanical clunk of a channel dial notching over.
+  function clunk() {
+    const c = ensure(); if (!c) return;
+    const t = c.currentTime;
+    const o = c.createOscillator();
+    o.type = 'triangle'; o.frequency.setValueAtTime(180, t); o.frequency.exponentialRampToValueAtTime(70, t + 0.08);
+    const g = c.createGain();
+    g.gain.setValueAtTime(0.35, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.12);
+    o.connect(g).connect(master); o.start(t); o.stop(t + 0.13);
+    const n = c.createBufferSource(); n.buffer = noiseBuffer;
+    const f = c.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 0.8;
+    const ng = c.createGain();
+    ng.gain.setValueAtTime(0.25, t); ng.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
+    n.connect(f).connect(ng).connect(master); n.start(t); n.stop(t + 0.07);
   }
 
   function powerOn() {
@@ -99,5 +122,5 @@
     o.start(t); o.stop(t + 0.1);
   }
 
-  window.SFX = { resume, setVolume, hiss, click, powerOn, powerOff, blip };
+  window.SFX = { resume, setVolume, hiss, click, press, release, clunk, powerOn, powerOff, blip };
 })();

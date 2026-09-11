@@ -11,7 +11,7 @@
 // like without ever becoming a loop of the same five clips.
 // =========================================================
 (function () {
-  const KEY = 'mtv1999.taste.v1';
+  const KEY = 'mtv.taste.v1';
   const ERA_TAGS = new Set(['80s', '90s']);
   const CLAMP = 8;
 

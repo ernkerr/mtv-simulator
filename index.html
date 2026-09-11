@@ -3,46 +3,51 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MTV 1999 — Retro Music Television Simulator</title>
-  <meta name="description" content="A retro 1999 TV that plays old music videos. Flip channels, check the guide, and it learns your taste.">
-  <meta name="theme-color" content="#0b0a0f">
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='4' y='10' width='56' height='42' rx='6' fill='%23222'/%3E%3Crect x='9' y='15' width='38' height='32' rx='4' fill='%2333dd55'/%3E%3Ccircle cx='53' cy='24' r='3' fill='%23f33'/%3E%3C/svg%3E">
+  <title>MTV — Music Television Simulator</title>
+  <meta name="description" content="A big boxy console TV that only gets music channels. Flip around, check the guide, and it learns your taste.">
+  <meta name="theme-color" content="#1a0d0a">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='8' width='60' height='46' rx='3' fill='%235a3218'/%3E%3Crect x='8' y='14' width='36' height='32' rx='4' fill='%2333dd55'/%3E%3Ccircle cx='53' cy='24' r='5' fill='%23111'/%3E%3Ccircle cx='53' cy='38' r='4' fill='%23111'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Anton&family=Permanent+Marker&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Anton&family=Permanent+Marker&family=Righteous&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body data-tv="off">
   <a class="skip-link" href="#remote">Skip to remote control</a>
 
-  <main class="room">
-    <header class="room-header">
-      <h1 class="wordmark"><span class="wordmark-m">M</span><span class="wordmark-tv">tv</span><span class="wordmark-year">1999</span></h1>
-      <p class="tagline">Music Television, the way it looked before the internet ate it. Flip around; it learns what you like.</p>
-    </header>
+  <!-- the room: wall, floor, lamp light, and the glow the tube throws on everything -->
+  <div class="wall" aria-hidden="true"></div>
+  <div class="floor" aria-hidden="true"></div>
+  <div class="lamp" aria-hidden="true"></div>
+  <div class="tube-glow" aria-hidden="true"></div>
 
-    <div class="stage">
-      <!-- ===== THE TELEVISION ===== -->
-      <section class="tv" aria-label="Television">
-        <div class="tv-body">
+  <header class="topbar">
+    <div class="wordmark" aria-label="MTV"><span class="wordmark-m">M</span><span class="wordmark-tv">tv</span></div>
+    <button type="button" class="manual-btn" id="manualBtn" aria-expanded="false" aria-controls="manual">? MANUAL</button>
+  </header>
+
+  <main class="room">
+    <!-- ===== THE TELEVISION ===== -->
+    <section class="tv" aria-label="Television">
+      <div class="cabinet">
+        <div class="cabinet-top"></div>
+
+        <div class="cabinet-face">
+          <!-- picture tube -->
           <div class="bezel">
             <div class="screen" id="screen" data-state="off">
               <div class="screen-inner">
-                <!-- video layer (YouTube iframe lives here) -->
                 <div class="video-layer" id="videoLayer" aria-hidden="true">
                   <div id="yt"></div>
                 </div>
 
-                <!-- static / snow -->
                 <canvas class="snow" id="snow" width="320" height="240" aria-hidden="true"></canvas>
 
-                <!-- no signal card -->
                 <div class="nosignal" id="nosignal" hidden>
-                  <div class="nosignal-text">NO SIGNAL</div>
+                  <div class="nosignal-text" id="nosignalText">NO SIGNAL</div>
                   <div class="nosignal-sub" id="nosignalSub"></div>
                 </div>
 
-                <!-- MTV lower-third title card -->
                 <div class="lower-third" id="lowerThird" hidden>
                   <div class="lt-artist" id="ltArtist"></div>
                   <div class="lt-title" id="ltTitle"></div>
@@ -50,36 +55,28 @@
                   <div class="lt-label" id="ltLabel"></div>
                 </div>
 
-                <!-- channel bug (logo) -->
                 <div class="bug" id="bug" hidden>
                   <span class="bug-m">M</span><span class="bug-tv">tv</span>
                   <span class="bug-sub" id="bugSub"></span>
                 </div>
 
-                <!-- OSD: channel number -->
                 <div class="osd osd-channel" id="osdChannel" hidden>
                   <div class="osd-num" id="osdNum">01</div>
                   <div class="osd-name" id="osdName">MTV</div>
                 </div>
-
-                <!-- OSD: volume -->
                 <div class="osd osd-volume" id="osdVolume" hidden>
                   <span class="osd-vol-label">VOL</span>
                   <span class="osd-vol-bar" id="osdVolBar"></span>
                 </div>
-
-                <!-- OSD: mute -->
                 <div class="osd osd-mute" id="osdMute" hidden>MUTE</div>
-
-                <!-- OSD: learning toast -->
                 <div class="osd osd-learn" id="osdLearn" hidden></div>
 
-                <!-- ===== GUIDE (Prevue style) ===== -->
+                <!-- ===== GUIDE ===== -->
                 <div class="guide" id="guide" hidden>
                   <div class="guide-top">
                     <div class="guide-preview-hole"></div>
                     <div class="guide-info">
-                      <div class="guide-clock" id="guideClock">FRI SEP 10 1999 &nbsp; 8:04 PM</div>
+                      <div class="guide-clock" id="guideClock"></div>
                       <div class="guide-tabs">
                         <button type="button" class="guide-tab is-active" data-tab="listings">LISTINGS</button>
                         <button type="button" class="guide-tab" data-tab="taste">YOUR TASTE</button>
@@ -98,90 +95,129 @@
                   <div class="guide-ticker"><div class="guide-ticker-inner" id="guideTicker"></div></div>
                 </div>
 
-                <!-- CRT overlays -->
                 <div class="crt-scanlines" aria-hidden="true"></div>
                 <div class="crt-vignette" aria-hidden="true"></div>
                 <div class="crt-glare" aria-hidden="true"></div>
               </div>
             </div>
+          </div>
 
-            <div class="front-panel">
-              <div class="brand">SONIC<span>TRON</span> <small>TRINITONE 27"</small></div>
-              <div class="panel-buttons">
-                <button type="button" class="pbtn" data-action="chdown" aria-label="Channel down">CH −</button>
-                <button type="button" class="pbtn" data-action="chup" aria-label="Channel up">CH +</button>
-                <button type="button" class="pbtn" data-action="voldown" aria-label="Volume down">VOL −</button>
-                <button type="button" class="pbtn" data-action="volup" aria-label="Volume up">VOL +</button>
+          <!-- control column -->
+          <div class="panel">
+            <div class="badge"><span class="badge-name">Boogievision</span><span class="badge-line">SOLID STATE &middot; COLOR</span></div>
+
+            <div class="dial-wrap">
+              <div class="dial-label">CHANNEL</div>
+              <div class="dial dial-channel" id="channelDial" role="slider" aria-label="Channel dial" aria-valuemin="1" aria-valuemax="10" aria-valuenow="1" tabindex="0" title="Click to turn up, shift-click to turn down, or scroll">
+                <div class="dial-ticks" id="channelTicks"></div>
+                <div class="knob" id="channelKnob"><i class="knob-pointer"></i></div>
               </div>
-              <div class="led-wrap"><span class="led" id="led"></span><span class="led-label">STANDBY</span></div>
-              <button type="button" class="power-btn" data-action="power" aria-label="Power">⏻</button>
             </div>
-          </div>
-          <div class="speaker-grille" aria-hidden="true"></div>
-        </div>
-        <div class="tv-feet" aria-hidden="true"><span></span><span></span></div>
-      </section>
 
-      <!-- ===== THE REMOTE ===== -->
-      <section class="remote" id="remote" aria-label="Remote control">
-        <div class="remote-top">
-          <button type="button" class="rbtn rbtn-power" data-action="power" title="Power (P)">⏻</button>
-          <span class="remote-brand">SONICTRON</span>
-          <button type="button" class="rbtn rbtn-mute" data-action="mute" title="Mute (M)">MUTE</button>
-        </div>
+            <div class="dial-wrap dial-wrap-small">
+              <div class="dial-label">VOLUME</div>
+              <div class="dial dial-volume" id="volumeDial" role="slider" aria-label="Volume dial" aria-valuemin="0" aria-valuemax="100" aria-valuenow="70" tabindex="0" title="Click to turn up, shift-click to turn down, or scroll">
+                <div class="knob knob-small" id="volumeKnob"><i class="knob-pointer"></i></div>
+              </div>
+            </div>
 
-        <div class="remote-numpad">
-          <button type="button" class="rbtn num" data-digit="1">1</button>
-          <button type="button" class="rbtn num" data-digit="2">2</button>
-          <button type="button" class="rbtn num" data-digit="3">3</button>
-          <button type="button" class="rbtn num" data-digit="4">4</button>
-          <button type="button" class="rbtn num" data-digit="5">5</button>
-          <button type="button" class="rbtn num" data-digit="6">6</button>
-          <button type="button" class="rbtn num" data-digit="7">7</button>
-          <button type="button" class="rbtn num" data-digit="8">8</button>
-          <button type="button" class="rbtn num" data-digit="9">9</button>
-          <button type="button" class="rbtn" data-action="last" title="Previous channel (L)">LAST</button>
-          <button type="button" class="rbtn num" data-digit="0">0</button>
-          <button type="button" class="rbtn" data-action="info" title="Info (I)">INFO</button>
-        </div>
+            <div class="trim-row" aria-hidden="true">
+              <span class="trim"><i></i><b>BRIGHT</b></span>
+              <span class="trim"><i></i><b>COLOR</b></span>
+              <span class="trim"><i></i><b>TINT</b></span>
+            </div>
 
-        <div class="remote-rockers">
-          <div class="rocker">
-            <button type="button" class="rbtn rocker-up" data-action="chup" title="Channel up (↑)">▲</button>
-            <span class="rocker-label">CH</span>
-            <button type="button" class="rbtn rocker-down" data-action="chdown" title="Channel down (↓)">▼</button>
-          </div>
-          <button type="button" class="rbtn rbtn-guide" data-action="guide" title="Guide (G)">GUIDE</button>
-          <div class="rocker">
-            <button type="button" class="rbtn rocker-up" data-action="volup" title="Volume up (→)">+</button>
-            <span class="rocker-label">VOL</span>
-            <button type="button" class="rbtn rocker-down" data-action="voldown" title="Volume down (←)">−</button>
+            <div class="power-row">
+              <span class="jewel" id="led"></span>
+              <button type="button" class="push power-push" data-action="power" aria-label="Power">POWER</button>
+            </div>
+
+            <div class="grille" aria-hidden="true"></div>
           </div>
         </div>
 
-        <div class="remote-taste">
-          <button type="button" class="rbtn rbtn-love" data-action="love" title="Love this (F)">♥ LOVE</button>
-          <button type="button" class="rbtn rbtn-nope" data-action="nope" title="Not my thing (X)">✕ NOPE</button>
-        </div>
+        <div class="cabinet-base"></div>
+      </div>
+      <div class="legs" aria-hidden="true"><span></span><span></span></div>
+    </section>
 
-        <div class="remote-hint">
-          <span>↑↓ channels</span><span>←→ volume</span><span>G guide</span><span>F love</span><span>X nope</span><span>0–9 tune</span>
-        </div>
-      </section>
-    </div>
+    <!-- ===== THE REMOTE ===== -->
+    <section class="remote" id="remote" aria-label="Remote control">
+      <div class="remote-top">
+        <button type="button" class="rbtn rbtn-power" data-action="power" data-key="p" title="Power (P)">⏻</button>
+        <span class="remote-brand">Boogievision</span>
+        <button type="button" class="rbtn rbtn-small" data-action="mute" data-key="m" title="Mute (M)">MUTE</button>
+      </div>
 
-    <footer class="room-footer">
-      <p>
-        <strong>How it learns:</strong> every flip is a vote. Bail on a video in the first few seconds and the TV notes it.
-        Stick around, or hit <em>LOVE</em>, and channel 2 (<em>MTV YOU</em>) starts programming for you. Every other channel quietly reorders itself around your taste too.
-        Everything is stored in your browser only.
-      </p>
-      <p class="fineprint">
-        Unofficial fan project. Not affiliated with MTV or Paramount. Videos play from YouTube via the official embed API; some may be region-locked or unavailable and the TV will skip them.
+      <div class="remote-numpad">
+        <button type="button" class="rbtn num" data-digit="1" data-key="1">1</button>
+        <button type="button" class="rbtn num" data-digit="2" data-key="2">2</button>
+        <button type="button" class="rbtn num" data-digit="3" data-key="3">3</button>
+        <button type="button" class="rbtn num" data-digit="4" data-key="4">4</button>
+        <button type="button" class="rbtn num" data-digit="5" data-key="5">5</button>
+        <button type="button" class="rbtn num" data-digit="6" data-key="6">6</button>
+        <button type="button" class="rbtn num" data-digit="7" data-key="7">7</button>
+        <button type="button" class="rbtn num" data-digit="8" data-key="8">8</button>
+        <button type="button" class="rbtn num" data-digit="9" data-key="9">9</button>
+        <button type="button" class="rbtn rbtn-small" data-action="last" data-key="l" title="Previous channel (L)">LAST</button>
+        <button type="button" class="rbtn num" data-digit="0" data-key="0">0</button>
+        <button type="button" class="rbtn rbtn-small" data-action="info" data-key="i" title="Info (I)">INFO</button>
+      </div>
+
+      <div class="remote-rockers">
+        <div class="rocker">
+          <button type="button" class="rbtn rocker-btn" data-action="chup" data-key="ArrowUp" title="Channel up (↑)">▲</button>
+          <span class="rocker-label">CH</span>
+          <button type="button" class="rbtn rocker-btn" data-action="chdown" data-key="ArrowDown" title="Channel down (↓)">▼</button>
+        </div>
+        <button type="button" class="rbtn rbtn-guide" data-action="guide" data-key="g" title="Guide (G)">GUIDE</button>
+        <div class="rocker">
+          <button type="button" class="rbtn rocker-btn" data-action="volup" data-key="ArrowRight" title="Volume up (→)">+</button>
+          <span class="rocker-label">VOL</span>
+          <button type="button" class="rbtn rocker-btn" data-action="voldown" data-key="ArrowLeft" title="Volume down (←)">−</button>
+        </div>
+      </div>
+
+      <div class="remote-taste">
+        <button type="button" class="rbtn rbtn-love" data-action="love" data-key="f" title="Love this (F)">♥ LOVE</button>
+        <button type="button" class="rbtn rbtn-nope" data-action="nope" data-key="x" title="Not my thing (X)">✕ NOPE</button>
+      </div>
+
+      <div class="remote-ir" aria-hidden="true"></div>
+    </section>
+  </main>
+
+  <!-- ===== MANUAL ===== -->
+  <div class="manual" id="manual" hidden>
+    <div class="manual-card" role="dialog" aria-modal="true" aria-labelledby="manualTitle">
+      <button type="button" class="manual-close" id="manualClose" aria-label="Close">×</button>
+      <h2 id="manualTitle">Owner's Manual</h2>
+      <p class="manual-lede">A console television that only gets music channels. Turn it on, flip around, and leave it on. It pays attention.</p>
+
+      <h3>Controls</h3>
+      <table class="manual-table">
+        <tr><td>Power</td><td><kbd>P</kbd> or the POWER button on the set</td></tr>
+        <tr><td>Channel up / down</td><td><kbd>↑</kbd> <kbd>↓</kbd>, the CH rocker, or turn the CHANNEL dial (click, shift-click, or scroll)</td></tr>
+        <tr><td>Tune directly</td><td><kbd>0</kbd>–<kbd>9</kbd> (two digits, or wait a beat)</td></tr>
+        <tr><td>Last channel</td><td><kbd>L</kbd></td></tr>
+        <tr><td>Volume / mute</td><td><kbd>→</kbd> <kbd>←</kbd> / <kbd>M</kbd>, or the VOLUME dial</td></tr>
+        <tr><td>Guide</td><td><kbd>G</kbd>. Browse with <kbd>↑</kbd> <kbd>↓</kbd>, tune with <kbd>Enter</kbd>, switch tabs with <kbd>←</kbd> <kbd>→</kbd></td></tr>
+        <tr><td>Info</td><td><kbd>I</kbd> or <kbd>Enter</kbd> brings the title card back</td></tr>
+        <tr><td>Love / Nope</td><td><kbd>F</kbd> / <kbd>X</kbd></td></tr>
+        <tr><td>Your taste</td><td><kbd>T</kbd> jumps straight to the YOUR TASTE tab</td></tr>
+        <tr><td>On a phone</td><td>Swipe up or down on the screen to flip. Tap for info.</td></tr>
+      </table>
+
+      <h3>How it learns</h3>
+      <p>Every flip is a vote. Bail on a video in the first few seconds and the set notes it. Stick around, or hit <b>LOVE</b>, and channel 2 (<b>MTV YOU</b>) starts programming for you. Every other channel quietly reorders its upcoming picks around your taste too, without losing its genre.</p>
+      <p>It all lives in this browser. Nothing is sent anywhere.</p>
+
+      <p class="manual-fine">
+        Unofficial fan project. Not affiliated with MTV, VH1, or Paramount. Videos play from YouTube through the official embed; some may be unavailable in your region and the set skips them.
         <a href="#" id="resetTaste">Reset what it has learned</a>
       </p>
-    </footer>
-  </main>
+    </div>
+  </div>
 
   <script src="js/catalog.js"></script>
   <script src="js/sfx.js"></script>

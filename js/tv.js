@@ -1,5 +1,5 @@
 // =========================================================
-// MTV 1999 — the television itself.
+// MTV — the television itself.
 // Channels run on a virtual "live" schedule (they keep playing
 // whether or not you're watching), the guide is a Prevue Channel
 // homage, and every flip feeds the taste model.
@@ -31,9 +31,10 @@
     'RADIO SHACK: YOU\'VE GOT QUESTIONS. WE\'VE GOT ANSWERS.',
     'COLLECT CALL? DIAL DOWN THE CENTER: 1-800-C-A-L-L-A-T-T.',
     'NOW ON PAY-PER-VIEW: THE MATRIX. ORDER BEFORE 8PM.',
-    'Y2K READY? SET YOUR VCR CLOCK NOW.',
+    'SET YOUR VCR. TAPE IT. WATCH IT AGAIN.',
     'TRL LIVE FROM TIMES SQUARE WEEKDAYS AT 3:30.',
-    'MTV SPRING BREAK \'99: CANCUN. ENOUGH SAID.',
+    'MTV SPRING BREAK: CANCUN. ENOUGH SAID.',
+    'THE BOOGIEVISION 27" CONSOLE: SOLID STATE. REAL WOOD. NO PAYMENTS UNTIL SPRING.',
     'DIAL-UP TIP: PICK UP THE PHONE AND LOSE THE CONNECTION.',
   ];
 
@@ -62,7 +63,7 @@
 
   function loadState() {
     try {
-      const d = JSON.parse(localStorage.getItem('mtv1999.state') || '{}');
+      const d = JSON.parse(localStorage.getItem('mtv.state') || '{}');
       if (d.channel && byNum(d.channel)) S.channel = d.channel;
       if (typeof d.volume === 'number') S.volume = Math.max(0, Math.min(100, d.volume));
       if (typeof d.muted === 'boolean') S.muted = d.muted;
@@ -70,7 +71,7 @@
     } catch (e) { /* ignore */ }
   }
   function saveState() {
-    try { localStorage.setItem('mtv1999.state', JSON.stringify({ channel: S.channel, lastChannel: S.lastChannel, volume: S.volume, muted: S.muted })); } catch (e) { /* ignore */ }
+    try { localStorage.setItem('mtv.state', JSON.stringify({ channel: S.channel, lastChannel: S.lastChannel, volume: S.volume, muted: S.muted })); } catch (e) { /* ignore */ }
   }
 
   // ---------- scheduling ----------
@@ -205,7 +206,29 @@
     osdVolume: $('osdVolume'), osdVolBar: $('osdVolBar'), osdMute: $('osdMute'), osdLearn: $('osdLearn'),
     guide: $('guide'), guideGrid: $('guideGrid'), guideClock: $('guideClock'), guideNow: $('guideNow'), guideTicker: $('guideTicker'),
     tastePanel: $('tastePanel'), led: $('led'), videoLayer: $('videoLayer'),
+    channelDial: $('channelDial'), channelKnob: $('channelKnob'), channelTicks: $('channelTicks'),
+    volumeDial: $('volumeDial'), volumeKnob: $('volumeKnob'), manual: $('manual'), manualBtn: $('manualBtn'),
   };
+
+  // ---------- the dials on the set ----------
+  const DIAL_START = -162; // degrees: channel 1 sits upper-left, channel 10 upper-right
+  const DIAL_STEP = 36;
+  function buildTicks() {
+    el.channelTicks.innerHTML = CHANNELS.map((ch, i) => {
+      const a = DIAL_START + i * DIAL_STEP;
+      return `<span class="tick" data-num="${ch.num}" style="transform: rotate(${a}deg)"><i></i><b style="transform: translate(-50%, -50%) rotate(${-a}deg)">${ch.num}</b></span>`;
+    }).join('');
+  }
+  function updateDials() {
+    const ch = byNum(S.channel);
+    const idx = ch ? CHANNELS.indexOf(ch) : -1;
+    const angle = idx >= 0 ? DIAL_START + idx * DIAL_STEP : DIAL_START - 18; // off the end for a dead channel
+    el.channelKnob.style.transform = `rotate(${angle}deg)`;
+    el.channelDial.setAttribute('aria-valuenow', S.channel);
+    el.channelTicks.querySelectorAll('.tick').forEach(t => t.classList.toggle('is-on', +t.dataset.num === S.channel));
+    el.volumeKnob.style.transform = `rotate(${-135 + S.volume / 100 * 270}deg)`;
+    el.volumeDial.setAttribute('aria-valuenow', S.volume);
+  }
 
   // ---------- snow ----------
   const snowCtx = el.snow.getContext('2d');
@@ -229,6 +252,7 @@
 
   function setScreenState(st) {
     el.screen.dataset.state = st;
+    document.body.dataset.tv = st;
     if (st === 'static' || st === 'nosignal') snowOn(); else snowOff();
   }
 
@@ -291,7 +315,7 @@
       if (S.power) return;
       S.power = true;
       SFX.resume(); SFX.powerOn();
-      el.led.className = 'led on';
+      el.led.className = 'jewel on';
       el.screen.classList.remove('is-powering-off');
       el.screen.classList.add('is-powering-on');
       setTimeout(() => el.screen.classList.remove('is-powering-on'), 600);
@@ -312,7 +336,7 @@
       if (S.guideOpen) App.closeGuide();
       SFX.powerOff();
       Player.stop();
-      el.led.className = 'led standby';
+      el.led.className = 'jewel standby';
       el.lt.hidden = true; el.bug.hidden = true; el.osdChannel.hidden = true; el.osdVolume.hidden = true; el.osdMute.hidden = true; el.osdLearn.hidden = true; el.nosignal.hidden = true;
       el.screen.classList.add('is-powering-off');
       setTimeout(() => { setScreenState('off'); el.screen.classList.remove('is-powering-off'); }, 460);
@@ -326,6 +350,8 @@
       App.endWatch(false);
       if (!ch) {
         S.channel = num;
+        updateDials();
+        SFX.clunk();
         showChannelOSD(String(num).padStart(2, '0'), '');
         App.noSignal('');
         SFX.hiss(0.5, 0.4);
@@ -336,8 +362,9 @@
       saveState();
       el.nosignal.hidden = true;
 
-      // static burst between channels
-      if (!opts.silent) SFX.hiss(0.32, 0.35);
+      updateDials();
+      // the dial notches over, then a burst of static between channels
+      if (!opts.silent) { SFX.clunk(); SFX.hiss(0.32, 0.35); }
       setScreenState('static');
       el.lt.hidden = true; el.bug.hidden = true;
       showChannelOSD(String(ch.num).padStart(2, '0'), ch.name);
@@ -452,7 +479,7 @@
       S.volume = Math.max(0, Math.min(100, S.volume + delta));
       if (S.muted && delta > 0) { S.muted = false; el.osdMute.hidden = true; }
       SFX.setVolume(0.15 + S.volume / 100 * 0.6);
-      Player.applyVolume(); saveState(); showVolumeOSD(); SFX.blip(delta > 0);
+      Player.applyVolume(); saveState(); showVolumeOSD(); updateDials(); SFX.blip(delta > 0);
     },
     toggleMute() {
       if (!S.power) return;
@@ -534,11 +561,10 @@
     },
     renderClock() {
       const d = new Date();
-      const in99 = new Date(1999, d.getMonth(), d.getDate(), d.getHours(), d.getMinutes());
       const days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
       const months = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
-      let h = in99.getHours(); const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
-      el.guideClock.textContent = `${days[in99.getDay()]} ${months[in99.getMonth()]} ${in99.getDate()} 1999   ${h}:${String(in99.getMinutes()).padStart(2, '0')} ${ampm}`;
+      let h = d.getHours(); const ampm = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12;
+      el.guideClock.textContent = `${days[d.getDay()]} ${months[d.getMonth()]} ${d.getDate()}   ${h}:${String(d.getMinutes()).padStart(2, '0')} ${ampm}`;
     },
     renderGuide() {
       App.renderClock();
@@ -607,9 +633,52 @@
     const a = b.dataset.action;
     if (a === 'chup' && S.guideOpen) return App.guideMove(-1);
     if (a === 'chdown' && S.guideOpen) return App.guideMove(1);
-    if (a !== 'power' && a !== 'guide' && a !== 'mute' && a !== 'volup' && a !== 'voldown') SFX.click();
     if (ACTIONS[a]) ACTIONS[a]();
   });
+
+  // Physical buttons: they clack on the way down and again on the way up.
+  let pressedEl = null;
+  document.addEventListener('pointerdown', (e) => {
+    const b = e.target.closest('.rbtn, .push, .manual-btn, .guide-tab');
+    if (!b) return;
+    SFX.resume(); SFX.press();
+    pressedEl = b;
+  });
+  const releaseBtn = () => { if (pressedEl) { SFX.release(); pressedEl = null; } };
+  document.addEventListener('pointerup', releaseBtn);
+  document.addEventListener('pointercancel', releaseBtn);
+  // Keyboard shortcuts push the matching button on the remote so you can see what you did.
+  function pressKey(k) {
+    const b = document.querySelector(`.remote [data-key="${CSS.escape(k)}"]`);
+    if (!b) return;
+    b.classList.add('is-pressed'); SFX.press();
+    setTimeout(() => { b.classList.remove('is-pressed'); SFX.release(); }, 110);
+  }
+
+  // The dials: click to turn up, shift-click (or right-click) to turn down, scroll either way.
+  function dialTurn(dialEl, up, down) {
+    dialEl.addEventListener('click', (e) => { SFX.resume(); (e.shiftKey ? down : up)(); dialEl.blur(); });
+    dialEl.addEventListener('contextmenu', (e) => { e.preventDefault(); SFX.resume(); down(); });
+    let last = 0;
+    dialEl.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const now = Date.now(); if (now - last < 160) return; last = now;
+      SFX.resume(); (e.deltaY < 0 ? up : down)();
+    }, { passive: false });
+    dialEl.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); up(); }
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); down(); }
+    });
+  }
+  dialTurn(el.channelDial, () => { if (S.power) App.channelUp(); else App.powerOn(); }, () => { if (S.power) App.channelDown(); else App.powerOn(); });
+  dialTurn(el.volumeDial, () => App.volume(5), () => App.volume(-5));
+
+  // The owner's manual
+  function openManual() { el.manual.hidden = false; el.manualBtn.setAttribute('aria-expanded', 'true'); }
+  function closeManual() { el.manual.hidden = true; el.manualBtn.setAttribute('aria-expanded', 'false'); }
+  el.manualBtn.addEventListener('click', () => el.manual.hidden ? openManual() : closeManual());
+  $('manualClose').addEventListener('click', closeManual);
+  el.manual.addEventListener('click', (e) => { if (e.target === el.manual) closeManual(); });
   document.querySelectorAll('.guide-tab').forEach(b => b.addEventListener('click', () => App.guideTab(b.dataset.tab)));
   el.guideGrid.addEventListener('click', (e) => {
     const row = e.target.closest('.guide-row'); if (!row) return;
@@ -626,6 +695,8 @@
     const tag = (e.target.tagName || '').toLowerCase();
     if (tag === 'input' || tag === 'textarea') return;
     const k = e.key;
+    if (!el.manual.hidden) { if (k === 'Escape' || k === '?') { closeManual(); e.preventDefault(); } return; }
+    if (k === '?') { openManual(); e.preventDefault(); return; }
     let handled = true;
     if (/^[0-9]$/.test(k)) App.digit(k);
     else if (k === 'ArrowUp') S.guideOpen ? App.guideMove(-1) : App.channelUp();
@@ -647,7 +718,7 @@
       case 't': if (S.guideOpen) App.guideTab(S.guideTab === 'taste' ? 'listings' : 'taste'); else { App.openGuide(); App.guideTab('taste'); } break;
       default: handled = false;
     }
-    if (handled) { SFX.resume(); e.preventDefault(); }
+    if (handled) { SFX.resume(); e.preventDefault(); pressKey(k.length === 1 ? k.toLowerCase() : k); }
   });
 
   // swipe up/down on the tube to flip channels; tap for info
@@ -664,8 +735,10 @@
   // ---------- boot ----------
   loadState();
   initSchedule();
+  buildTicks();
+  updateDials();
   SFX.setVolume(0.15 + S.volume / 100 * 0.6);
-  el.led.className = 'led standby';
+  el.led.className = 'jewel standby';
   setScreenState('off');
   el.nosignalSub.textContent = '';
   // an "off" tube shows a faint reflection and a hint

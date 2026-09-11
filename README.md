@@ -1,6 +1,6 @@
-# 📺 MTV 1999 — Retro Music Television Simulator
+# 📺 MTV — Music Television Simulator
 
-A 1999 living-room TV that only gets music channels. Flip around, check the guide, and it quietly learns what you like.
+A big boxy wood-console TV in a warm living room that only gets music channels. Turn the dial, check the guide, and it quietly learns what you like.
 
 No build step, no framework, no backend. Three JavaScript files and a stylesheet. Videos stream from YouTube through the official embed API.
 
@@ -9,25 +9,26 @@ No build step, no framework, no backend. Three JavaScript files and a stylesheet
 - **Ten channels on a live schedule.** Each channel keeps "airing" whether you're watching or not, so you tune in mid-video like real TV. Channel 1 is MTV proper (everything); the rest are themed blocks: *VH1 Classic* (80s), *Alternative Nation*, *120 Minutes*, *Yo! MTV Raps*, *Headbangers Ball*, *TRL*, *AMP* (electronic) and *MTV Jams* (R&B).
 - **Channel 2 is MTV YOU.** It is programmed by your taste and starts out random. The more you watch, the more it sounds like you.
 - **It learns from how you surf.** Bailing on a video in the first few seconds is a no. Sticking around, or watching to the end, is a yes. `LOVE` and `NOPE` on the remote are loud votes. Every other channel reorders its upcoming picks around what it has learned, but keeps its genre.
-- **A Prevue-style guide.** `GUIDE` shows the blue grid with NOW / NEXT for every channel, a 1999 clock, a ticker, and a *YOUR TASTE* tab with what the TV thinks it knows about you.
-- **CRT details.** Static between channels, scanlines, glass glare, a lower-third title card at the start and end of every video, an on-screen channel number, a volume bar, and synthesized power-on/off and static sounds.
+- **A Prevue-style guide.** `GUIDE` shows the blue grid with NOW / NEXT for every channel, a clock, a ticker, and a *YOUR TASTE* tab with what the TV thinks it knows about you.
+- **It feels like a real set.** A wood cabinet with a CHANNEL dial that notches over with a clunk, a VOLUME knob, a POWER push-button and a jewel light. The remote's rubber buttons lift on hover and push down when you click, with a clack on the way down and back up. Keyboard shortcuts press the matching remote button. Static between channels, scanlines, glass glare, a lower-third title card at the start and end of every video, and the tube throws light on the room.
 - **Private by design.** Everything it learns lives in `localStorage` in your browser. Nothing is sent anywhere. "Reset what it has learned" at the bottom of the page wipes it.
 
 ## Controls
 
 | Remote | Keyboard | Does |
 | --- | --- | --- |
-| ⏻ | `P` | Power |
-| CH ▲ / ▼ | `↑` / `↓` | Channel up / down |
+| ⏻ | `P` | Power (also the POWER button on the set) |
+| CH ▲ / ▼ | `↑` / `↓` | Channel up / down (or turn the CHANNEL dial: click, shift-click, or scroll) |
 | 0–9 | `0`–`9` | Tune directly (two digits, or wait a second) |
 | LAST | `L` | Previous channel |
-| VOL + / − | `→` / `←` | Volume |
+| VOL + / − | `→` / `←` | Volume (or turn the VOLUME dial) |
 | MUTE | `M` | Mute |
 | GUIDE | `G` | Open / close the guide (↑↓ to browse, Enter to tune, ←→ to switch tabs) |
 | INFO | `I` or `Enter` | Show the channel and the title card again |
 | ♥ LOVE | `F` | Strong yes for this video |
 | ✕ NOPE | `X` | Strong no; the channel moves on |
 | | `T` | Jump straight to the *YOUR TASTE* tab |
+| | `?` | Open the owner's manual |
 
 On a phone: swipe up or down on the screen to change channels, tap it for info.
 
@@ -75,7 +76,7 @@ Each channel picks its next video by a softmax over its own pool of videos, weig
 
 ## The catalog
 
-`js/catalog.js` lists ~200 videos from 1979–1999 with genre tags. Video IDs were verified against YouTube search results; some videos may still be region-locked or non-embeddable, and the TV skips those automatically and remembers not to schedule them again.
+`js/catalog.js` lists ~200 videos from the late 70s through the end of the 90s, with genre tags. Video IDs were verified against YouTube search results; some videos may still be region-locked or non-embeddable, and the TV skips those automatically and remembers not to schedule them again.
 
 To add a video, append an object with `id`, `artist`, `title`, `year` and `tags`. Tags decide which channels it appears on (see the lineup at the top of `js/tv.js`).
 
