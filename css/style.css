@@ -28,6 +28,7 @@
   --font-scrawl: 'Permanent Marker', 'Comic Sans MS', cursive;
   --font-groove: 'Righteous', 'Trebuchet MS', sans-serif;
   --font-cond: 'Barlow Condensed', 'Arial Narrow', Arial, sans-serif;
+  --font-card: 'Josefin Sans', 'Kabel', 'Century Gothic', 'Futura', sans-serif; /* Kabel is the real thing; this is the closest free face */
 }
 
 * { box-sizing: border-box; }
@@ -219,16 +220,21 @@ body[data-tv="static"] .tv::before, body[data-tv="nosignal"] .tv::before { opaci
 .bug-tv { font-family: var(--font-scrawl); font-size: clamp(11px, 2.4vw, 24px); color: #fff; margin-left: -9px; transform: rotate(-8deg); }
 .bug-sub { font-family: var(--font-cond); font-weight: 700; font-size: clamp(8px, 1.4vw, 13px); color: #fff; text-transform: uppercase; letter-spacing: 1px; margin-left: 8px; opacity: .9; }
 
+/* The classic MTV title card: four stacked lines, bottom-left, white Kabel-style type with a hard black shadow.
+   Artist, then the song in quotes, then the album, then the record label. It cuts in a few seconds into the
+   video and comes back for the last few seconds. */
 .lower-third {
-  position: absolute; left: 6%; bottom: 9%; z-index: 5; pointer-events: none; line-height: 1.15;
-  font-family: var(--font-cond); color: #fff; text-shadow: 2px 2px 0 #000, 0 0 8px rgba(0,0,0,.8); animation: lt-in .35s ease-out;
+  position: absolute; left: 7%; bottom: 10%; z-index: 5; pointer-events: none; max-width: 80%;
+  font-family: var(--font-card); font-weight: 700; color: #fff; line-height: 1.25;
+  text-shadow: 2px 2px 0 #000, 3px 3px 0 rgba(0,0,0,.55), 0 0 10px rgba(0,0,0,.6);
+  animation: lt-in .5s ease-out;
 }
-.lt-artist { font-weight: 700; font-size: clamp(14px, 3.2vw, 34px); text-transform: uppercase; letter-spacing: .5px; }
-.lt-title { font-weight: 500; font-size: clamp(13px, 2.8vw, 28px); }
+.lower-third.is-leaving { animation: lt-out .5s ease-in forwards; }
+.lt-line { font-size: clamp(12px, 2.6vw, 27px); letter-spacing: .3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .lt-title::before { content: "\201C"; } .lt-title::after { content: "\201D"; }
-.lt-meta { font-weight: 500; font-size: clamp(11px, 2.2vw, 20px); opacity: .95; }
-.lt-label { font-weight: 500; font-size: clamp(11px, 2vw, 18px); opacity: .8; text-transform: uppercase; letter-spacing: 1px; }
-@keyframes lt-in { from { transform: translateX(-30px); opacity: 0; } to { transform: none; opacity: 1; } }
+.lt-label:empty, .lt-album:empty { display: none; }
+@keyframes lt-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes lt-out { from { opacity: 1; } to { opacity: 0; } }
 
 /* ----- guide (Prevue homage) ----- */
 .guide { position: absolute; inset: 0; z-index: 7; display: flex; flex-direction: column; font-family: var(--font-osd); color: var(--guide-white); }

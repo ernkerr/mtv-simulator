@@ -200,7 +200,7 @@
   // ---------- DOM ----------
   const el = {
     screen: $('screen'), snow: $('snow'), nosignal: $('nosignal'), nosignalSub: $('nosignalSub'),
-    lt: $('lowerThird'), ltArtist: $('ltArtist'), ltTitle: $('ltTitle'), ltMeta: $('ltMeta'), ltLabel: $('ltLabel'),
+    lt: $('lowerThird'), ltArtist: $('ltArtist'), ltTitle: $('ltTitle'), ltAlbum: $('ltAlbum'), ltLabel: $('ltLabel'),
     bug: $('bug'), bugSub: $('bugSub'),
     osdChannel: $('osdChannel'), osdNum: $('osdNum'), osdName: $('osdName'),
     osdVolume: $('osdVolume'), osdVolBar: $('osdVolBar'), osdMute: $('osdMute'), osdLearn: $('osdLearn'),
@@ -287,13 +287,24 @@
     el.osdLearn.textContent = text;
     flash(el.osdLearn, 2400, 'osdLearn');
   }
-  function showLowerThird(v, ch, ms = 8000) {
+  // The title card. Cuts in, holds, fades out. delay = seconds before it appears.
+  function showLowerThird(v, ch, ms = 9000, delay = 0) {
     if (!v) return;
-    el.ltArtist.textContent = v.artist;
-    el.ltTitle.textContent = v.title;
-    el.ltMeta.textContent = `${v.year} · ${v.tags.filter(t => t !== '80s' && t !== '90s').slice(0, 2).map(window.prettyTag).join(' / ')}`;
-    el.ltLabel.textContent = ch.taste ? 'MTV YOU · PICKED FOR YOU' : ch.name;
-    flash(el.lt, ms, 'lt');
+    clearTimeout(timers.ltDelay); clearTimeout(timers.lt); clearTimeout(timers.ltOut);
+    const show = () => {
+      if (!S.power || !S.watch || S.watch.video !== v || S.guideOpen) return;
+      el.ltArtist.textContent = v.artist;
+      el.ltTitle.textContent = v.title;
+      el.ltAlbum.textContent = v.album || '';
+      el.ltLabel.textContent = v.label || '';
+      el.lt.classList.remove('is-leaving');
+      el.lt.hidden = false;
+      timers.lt = setTimeout(() => {
+        el.lt.classList.add('is-leaving');
+        timers.ltOut = setTimeout(() => { el.lt.hidden = true; el.lt.classList.remove('is-leaving'); }, 500);
+      }, ms);
+    };
+    if (delay > 0) timers.ltDelay = setTimeout(show, delay * 1000); else show();
   }
   function showBug(ch) {
     el.bugSub.textContent = ch.key === 'mtv' ? '' : ch.sub;
@@ -361,6 +372,7 @@
       S.channel = ch.num;
       saveState();
       el.nosignal.hidden = true;
+      clearTimeout(timers.ltDelay);
 
       updateDials();
       // the dial notches over, then a burst of static between channels
@@ -399,7 +411,7 @@
 
     // --- watching a video ---
     startWatch(video, ch, startSeconds) {
-      S.watch = { video, channelKey: ch.key, startedAt: Date.now(), playing: false, ended: false };
+      S.watch = { video, channelKey: ch.key, startedAt: Date.now(), playing: false, ended: false, tuneStart: startSeconds || 0 };
       S.ltShownEnd = false;
       taste.notePlay(video);
       Player.load(video.id, startSeconds);
@@ -428,9 +440,9 @@
       const t = Player.time(), d = Player.duration();
       if (d > 30 && !taste.duration(w.video.id)) taste.setDuration(w.video.id, d);
       // the card comes back for the last few seconds, like the real thing
-      if (d && !S.ltShownEnd && d - t < 14 && d - t > 4 && !S.guideOpen) {
+      if (d && !S.ltShownEnd && d - t < 16 && d - t > 5 && !S.guideOpen) {
         S.ltShownEnd = true;
-        showLowerThird(w.video, byNum(S.channel), 9000);
+        showLowerThird(w.video, byNum(S.channel), Math.max(4000, (d - t - 3) * 1000));
       }
     },
     onPlayerState(state) {
@@ -441,7 +453,7 @@
           w.playing = true;
           w.startedAt = Date.now();
           setScreenState('on');
-          if (!S.guideOpen) { showBug(ch); showLowerThird(w.video, ch); }
+          if (!S.guideOpen) { showBug(ch); showLowerThird(w.video, ch, 9000, (w.tuneStart || 0) < 3 ? 3 : 0.8); }
           const d = Player.duration(); if (d > 30) taste.setDuration(w.video.id, d);
         }
       } else if (state === 0) { // ENDED

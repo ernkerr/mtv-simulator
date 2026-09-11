@@ -10,6 +10,7 @@ No build step, no framework, no backend. Three JavaScript files and a stylesheet
 - **Channel 2 is MTV YOU.** It is programmed by your taste and starts out random. The more you watch, the more it sounds like you.
 - **It learns from how you surf.** Bailing on a video in the first few seconds is a no. Sticking around, or watching to the end, is a yes. `LOVE` and `NOPE` on the remote are loud votes. Every other channel reorders its upcoming picks around what it has learned, but keeps its genre.
 - **A Prevue-style guide.** `GUIDE` shows the blue grid with NOW / NEXT for every channel, a clock, a ticker, and a *YOUR TASTE* tab with what the TV thinks it knows about you.
+- **The real title card.** A few seconds into every video, the four-line card cuts in bottom-left the way MTV ran it: artist, the song in quotes, the album, the record label, in white Kabel-style type with a hard black shadow. It fades out, then comes back for the last few seconds. (Kabel itself is a commercial font; the site uses Josefin Sans, the closest free face, with Kabel as the first fallback if you have it installed.)
 - **It feels like a real set.** A wood cabinet with a CHANNEL dial that notches over with a clunk, a VOLUME knob, a POWER push-button and a jewel light. The remote's rubber buttons lift on hover and push down when you click, with a clack on the way down and back up. Keyboard shortcuts press the matching remote button. Static between channels, scanlines, glass glare, a lower-third title card at the start and end of every video, and the tube throws light on the room.
 - **Private by design.** Everything it learns lives in `localStorage` in your browser. Nothing is sent anywhere. "Reset what it has learned" at the bottom of the page wipes it.
 
@@ -78,7 +79,9 @@ Each channel picks its next video by a softmax over its own pool of videos, weig
 
 `js/catalog.js` lists ~200 videos from the late 70s through the end of the 90s, with genre tags. Video IDs were verified against YouTube search results; some videos may still be region-locked or non-embeddable, and the TV skips those automatically and remembers not to schedule them again.
 
-To add a video, append an object with `id`, `artist`, `title`, `year` and `tags`. Tags decide which channels it appears on (see the lineup at the top of `js/tv.js`).
+Album and label names on the title cards were filled in from memory for well-known releases; if you spot a wrong one, it's a one-line fix.
+
+To add a video, append an object with `id`, `artist`, `title`, `album`, `label`, `year` and `tags`. Tags decide which channels it appears on (see the lineup at the top of `js/tv.js`).
 
 ## Credits and disclaimer
 

@@ -9,7 +9,7 @@
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect x='2' y='8' width='60' height='46' rx='3' fill='%235a3218'/%3E%3Crect x='8' y='14' width='36' height='32' rx='4' fill='%2333dd55'/%3E%3Ccircle cx='53' cy='24' r='5' fill='%23111'/%3E%3Ccircle cx='53' cy='38' r='4' fill='%23111'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Anton&family=Permanent+Marker&family=Righteous&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=VT323&family=Anton&family=Permanent+Marker&family=Righteous&family=Josefin+Sans:wght@700&family=Barlow+Condensed:wght@500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body data-tv="off">
@@ -48,11 +48,12 @@
                   <div class="nosignal-sub" id="nosignalSub"></div>
                 </div>
 
+                <!-- the title card: artist / "song" / album / label, bottom-left, the way MTV ran it -->
                 <div class="lower-third" id="lowerThird" hidden>
-                  <div class="lt-artist" id="ltArtist"></div>
-                  <div class="lt-title" id="ltTitle"></div>
-                  <div class="lt-meta" id="ltMeta"></div>
-                  <div class="lt-label" id="ltLabel"></div>
+                  <div class="lt-line lt-artist" id="ltArtist"></div>
+                  <div class="lt-line lt-title" id="ltTitle"></div>
+                  <div class="lt-line lt-album" id="ltAlbum"></div>
+                  <div class="lt-line lt-label" id="ltLabel"></div>
                 </div>
 
                 <div class="bug" id="bug" hidden>
