@@ -124,6 +124,7 @@
   // ---------- the player (YouTube IFrame API, or a mock for offline dev) ----------
   const Player = {
     ready: false, failed: false, p: null, currentId: null, loadedAt: 0,
+    activated: false,   // true once the browser has let a video actually play (mobile needs a tap for the first one)
     init(onReady) {
       if (MOCK) { installMock(); }
       const boot = () => {
@@ -145,15 +146,16 @@
       window.onYouTubeIframeAPIReady = boot;
       const tag = document.createElement('script');
       tag.src = 'https://www.youtube.com/iframe_api';
-      tag.onerror = () => { Player.failed = true; App.noSignal('CAN\'T REACH YOUTUBE'); };
+      tag.onerror = () => { Player.failed = true; if (S.power) App.noSignal('CAN\'T REACH YOUTUBE'); };
       document.head.appendChild(tag);
       clearTimeout(timers.apiWatch);
-      timers.apiWatch = setTimeout(() => { if (!Player.ready) { Player.failed = true; App.noSignal('CAN\'T REACH YOUTUBE'); } }, 9000);
+      timers.apiWatch = setTimeout(() => { if (!Player.ready) { Player.failed = true; if (S.power) App.noSignal('CAN\'T REACH YOUTUBE'); } }, 9000);
     },
     load(id, start) {
       if (!Player.ready) return;
       Player.currentId = id; Player.loadedAt = Date.now();
       Player.p.loadVideoById({ videoId: id, startSeconds: Math.max(0, Math.floor(start || 0)) });
+      try { Player.p.playVideo(); } catch (e) { /* */ }   // called inside the tap/click so mobile browsers allow it
       Player.applyVolume();
     },
     stop() { if (Player.ready) { try { Player.p.stopVideo(); } catch (e) { /* */ } } Player.currentId = null; },
@@ -206,7 +208,7 @@
     osdVolume: $('osdVolume'), osdVolBar: $('osdVolBar'), osdMute: $('osdMute'), osdLearn: $('osdLearn'),
     guide: $('guide'), guideGrid: $('guideGrid'), guideClock: $('guideClock'), guideNow: $('guideNow'), guideTicker: $('guideTicker'),
     tastePanel: $('tastePanel'), led: $('led'), videoLayer: $('videoLayer'),
-    manual: $('manual'), manualBtn: $('manualBtn'),
+    manual: $('manual'), manualBtn: $('manualBtn'), nosignalText: $('nosignalText'),
   };
 
 
@@ -312,8 +314,7 @@
       setTimeout(() => el.screen.classList.remove('is-powering-on'), 600);
       setScreenState('static');
       if (!Player.ready && !Player.failed) {
-        Player.init(() => App.tune(S.channel, { silent: true }));
-        // while the API loads, keep snow on the tube
+        S.pendingTune = true;   // the player is still loading; it tunes as soon as it is ready
       } else if (Player.failed) {
         App.noSignal('CAN\'T REACH YOUTUBE');
       } else {
@@ -361,11 +362,9 @@
       const s = sync(ch);
       if (!s.now) { App.noSignal('NOTHING SCHEDULED'); return; }
       const start = elapsed(ch);
-      clearTimeout(timers.tuneIn);
-      timers.tuneIn = setTimeout(() => {
-        if (!S.power || S.channel !== ch.num) return;
-        App.startWatch(s.now, ch, start);
-      }, opts.silent ? 120 : 340);
+      // Start the video right now, inside the same tap or keypress: phones refuse playback started from a timer.
+      // The static stays on screen until the player reports it is actually playing.
+      App.startWatch(s.now, ch, start);
       if (S.guideOpen) App.renderGuide();
     },
     channelUp() { App.tune(S.channel >= MAX_CH ? MIN_CH : S.channel + 1); },
@@ -395,8 +394,12 @@
       // if it never starts, treat as dead air and move on
       clearTimeout(timers.watchdog);
       timers.watchdog = setTimeout(() => {
-        if (S.watch && S.watch.video === video && !S.watch.playing) App.skipDead(video, 'timeout');
+        if (!S.watch || S.watch.video !== video || S.watch.playing) return;
+        if (!Player.activated) App.needTap(); else App.skipDead(video, 'timeout');
       }, MOCK ? 4000 : 14000);
+      // A phone that blocked autoplay parks the player in "cued"; ask for a tap sooner than the watchdog.
+      clearTimeout(timers.tapHint);
+      if (!Player.activated) timers.tapHint = setTimeout(() => { if (S.watch && S.watch.video === video && !S.watch.playing) App.needTap(); }, MOCK ? 999999 : 2500);
       clearInterval(timers.poll);
       timers.poll = setInterval(App.poll, 1000);
     },
@@ -426,6 +429,8 @@
       const w = S.watch; if (!w) return;
       const ch = byNum(S.channel);
       if (state === 1) { // PLAYING
+        Player.activated = true;
+        App.hideTap();
         if (!w.playing) {
           w.playing = true;
           w.startedAt = Date.now();
@@ -460,6 +465,24 @@
       showChannelOSD(String(ch.num).padStart(2, '0'), ch.name);
       setTimeout(() => { if (S.power && S.channel === ch.num) App.startWatch(s.now, ch, 0); }, 300);
       if (S.guideOpen) App.renderGuide();
+    },
+
+    // --- mobile autoplay: the first play has to come from a tap ---
+    needTap() {
+      if (!S.power || !S.watch || S.watch.playing) return;
+      el.nosignalText.textContent = 'TAP THE SCREEN TO START';
+      el.nosignalSub.textContent = 'your browser wants a tap before it plays sound';
+      el.nosignal.hidden = false;
+    },
+    hideTap() {
+      if (el.nosignal.hidden) return;
+      el.nosignal.hidden = true;
+      el.nosignalText.textContent = 'NO SIGNAL';
+      el.nosignalSub.textContent = '';
+    },
+    // Called from any user gesture: if a video is loaded but stuck, kick it.
+    resumeIfStuck() {
+      if (S.power && S.watch && !S.watch.playing && Player.ready) Player.play();
     },
 
     // --- volume ---
@@ -700,13 +723,22 @@
     if (touchY === null) return;
     const dy = e.changedTouches[0].clientY - touchY; touchY = null;
     if (Math.abs(dy) > 40) { dy < 0 ? App.channelUp() : App.channelDown(); }
-    else if (Date.now() - touchT < 300) { S.power ? App.info() : App.powerOn(); }
+    else if (Date.now() - touchT < 300) {
+      if (!S.power) App.powerOn();
+      else if (S.watch && !S.watch.playing) App.resumeIfStuck();
+      else App.info();
+    }
   });
-  el.screen.addEventListener('click', () => { if (!S.power) App.powerOn(); });
+  el.screen.addEventListener('click', () => { if (!S.power) App.powerOn(); else App.resumeIfStuck(); });
+  // Any tap or key anywhere counts as the gesture a phone needs to let the first video play.
+  document.addEventListener('pointerdown', () => App.resumeIfStuck(), { capture: true });
+  document.addEventListener('keydown', () => App.resumeIfStuck(), { capture: true });
 
   // ---------- boot ----------
   loadState();
   initSchedule();
+  // Load the player now, while the set is still off, so pressing POWER can start a video inside the tap itself.
+  Player.init(() => { if (S.power && S.pendingTune) { S.pendingTune = false; App.tune(S.channel, { silent: true }); } });
   SFX.setVolume(0.15 + S.volume / 100 * 0.6);
   el.led.className = 'led standby';
   setScreenState('off');

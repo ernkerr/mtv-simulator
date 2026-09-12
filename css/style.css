@@ -367,10 +367,22 @@ body[data-tv="static"] .tv::before, body[data-tv="nosignal"] .tv::before { opaci
   .speaker { display: none; }
   .set-bottom { flex-wrap: wrap; gap: 8px 12px; padding-top: 10px; }
   .set-status { margin-left: auto; }
-  .set-buttons { width: 100%; justify-content: space-between; }
-  .push { font-size: 9px; padding: 6px 6px; }
+  .set-buttons { width: 100%; justify-content: space-between; gap: 6px; }
+  .push { flex: 1; font-size: 12px; padding: 12px 4px; min-height: 44px; border-radius: 6px; }
+  .push[data-action="power"] { flex: 1.3; }
   .stand { margin: 0 6%; }
-  .remote { transform: none; align-self: center; margin: 0 auto; width: 100%; max-width: 420px; }
+  .remote { transform: none; align-self: center; margin: 0 auto; width: 100%; max-width: 300px; padding: 12px 10px 16px; border-radius: 18px; }
+  .remote-top { margin-bottom: 10px; }
+  .rbtn { font-size: 12px; padding: 7px 4px; border-radius: 8px; }
+  .rbtn.num { font-size: 17px; padding: 5px 0; }
+  .rbtn-power { width: 36px; height: 36px; font-size: 14px; }
+  .rbtn-small { font-size: 10px; padding: 6px 4px; }
+  .remote-numpad { gap: 7px; margin-bottom: 10px; }
+  .remote-rockers { gap: 6px; margin-bottom: 10px; }
+  .rocker-btn { padding: 8px 0; }
+  .rocker-label { font-size: 10px; padding: 2px 0; }
+  .rbtn-guide { width: 48px; height: 48px; font-size: 10px; }
+  .remote-taste { gap: 7px; }
   .wordmark-m { font-size: 36px; } .wordmark-tv { font-size: 18px; }
 }
 
