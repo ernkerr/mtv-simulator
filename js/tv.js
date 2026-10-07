@@ -125,6 +125,7 @@
   const Player = {
     ready: false, failed: false, p: null, currentId: null, loadedAt: 0,
     activated: false,   // true once the browser has let a video actually play (mobile needs a tap for the first one)
+    warmId: null,       // a video already playing, muted, behind the off screen, so POWER shows it at once
     init(onReady) {
       if (MOCK) { installMock(); }
       const boot = () => {
@@ -151,14 +152,37 @@
       clearTimeout(timers.apiWatch);
       timers.apiWatch = setTimeout(() => { if (!Player.ready) { Player.failed = true; if (S.power) App.noSignal('CAN\'T REACH YOUTUBE'); } }, 9000);
     },
+    // While the set is off: start the channel it will open on, muted and
+    // hidden, so YouTube has it buffered by the time POWER is pressed.
+    warm(id, start) {
+      if (!Player.ready) return;
+      Player.warmId = id; Player.currentId = id; Player.loadedAt = Date.now();
+      try {
+        Player.p.mute();
+        Player.p.loadVideoById({ videoId: id, startSeconds: Math.max(0, Math.floor(start || 0)) });
+      } catch (e) { /* */ }
+    },
     load(id, start) {
       if (!Player.ready) return;
+      if (Player.warmId === id) {
+        // Already playing quietly: catch up to the live point, let it be heard.
+        Player.warmId = null; Player.loadedAt = Date.now();
+        try {
+          if (Math.abs(Player.time() - start) > 3) Player.p.seekTo(Math.max(0, Math.floor(start || 0)), true);
+          Player.p.playVideo();
+        } catch (e) { /* */ }
+        Player.applyVolume();
+        // It won't report "playing" again, so say so for it.
+        try { if (Player.p.getPlayerState() === 1) setTimeout(() => App.onPlayerState(1), 0); } catch (e) { /* */ }
+        return;
+      }
+      Player.warmId = null;
       Player.currentId = id; Player.loadedAt = Date.now();
       Player.p.loadVideoById({ videoId: id, startSeconds: Math.max(0, Math.floor(start || 0)) });
       try { Player.p.playVideo(); } catch (e) { /* */ }   // called inside the tap/click so mobile browsers allow it
       Player.applyVolume();
     },
-    stop() { if (Player.ready) { try { Player.p.stopVideo(); } catch (e) { /* */ } } Player.currentId = null; },
+    stop() { if (Player.ready) { try { Player.p.stopVideo(); } catch (e) { /* */ } } Player.currentId = null; Player.warmId = null; },
     pause() { if (Player.ready) { try { Player.p.pauseVideo(); } catch (e) { /* */ } } },
     play() { if (Player.ready) { try { Player.p.playVideo(); } catch (e) { /* */ } } },
     applyVolume() {
@@ -205,7 +229,7 @@
     lt: $('lowerThird'), ltArtist: $('ltArtist'), ltTitle: $('ltTitle'), ltAlbum: $('ltAlbum'), ltLabel: $('ltLabel'),
     bug: $('bug'), bugSub: $('bugSub'),
     osdChannel: $('osdChannel'), osdNum: $('osdNum'), osdName: $('osdName'),
-    osdVolume: $('osdVolume'), osdVolBar: $('osdVolBar'), osdMute: $('osdMute'), osdLearn: $('osdLearn'),
+    osdVolume: $('osdVolume'), osdVolBar: $('osdVolBar'), osdMute: $('osdMute'),
     guide: $('guide'), guideGrid: $('guideGrid'), guideClock: $('guideClock'), guideNow: $('guideNow'), guideTicker: $('guideTicker'),
     tastePanel: $('tastePanel'), led: $('led'), videoLayer: $('videoLayer'),
     manual: $('manual'), manualBtn: $('manualBtn'), nosignalText: $('nosignalText'),
@@ -253,21 +277,6 @@
     const blocks = 20, on = Math.round(S.volume / 100 * blocks);
     el.osdVolBar.innerHTML = Array.from({ length: blocks }, (_, i) => `<i class="${i < on ? 'on' : ''}"></i>`).join('');
     flash(el.osdVolume, 1800, 'osdVolume');
-  }
-  function showLearn(note) {
-    if (!note || !note.tag) return;
-    const label = window.prettyTag(note.tag);
-    let text;
-    switch (note.reason) {
-      case 'love': text = `♥ LOVED · MORE ${label.toUpperCase()}`; break;
-      case 'nope': text = `✕ NOPE · LESS ${label.toUpperCase()}`; break;
-      case 'skip': text = `✗ NOTED · LESS ${label.toUpperCase()}`; break;
-      case 'finished': text = `✓ NOTED · MORE ${label.toUpperCase()}`; break;
-      default: text = note.strength > 0.3 ? `✓ NOTED · MORE ${label.toUpperCase()}` : null;
-    }
-    if (!text) return;
-    el.osdLearn.textContent = text;
-    flash(el.osdLearn, 2400, 'osdLearn');
   }
   // The title card. Cuts in, holds, fades out. delay = seconds before it appears.
   function showLowerThird(v, ch, ms = 9000, delay = 0) {
@@ -329,7 +338,7 @@
       SFX.powerOff();
       Player.stop();
       el.led.className = 'led standby';
-      el.lt.hidden = true; el.bug.hidden = true; el.osdChannel.hidden = true; el.osdVolume.hidden = true; el.osdMute.hidden = true; el.osdLearn.hidden = true; el.nosignal.hidden = true;
+      el.lt.hidden = true; el.bug.hidden = true; el.osdChannel.hidden = true; el.osdVolume.hidden = true; el.osdMute.hidden = true; el.nosignal.hidden = true;
       el.screen.classList.add('is-powering-off');
       setTimeout(() => { setScreenState('off'); el.screen.classList.remove('is-powering-off'); }, 460);
       clearTimeout(timers.watchdog); clearInterval(timers.poll);
@@ -412,7 +421,6 @@
       if (!w.playing && !ended) return;           // never actually saw it — no opinion
       if (ended && watched < 20) { taste.noteWatched(watched); return; } // tuned in at the tail end — no opinion
       const note = taste.signalFromWatch(w.video, watched, taste.duration(w.video.id), ended);
-      showLearn(note);
       refreshNext();
     },
     poll() {
@@ -504,7 +512,7 @@
     // --- taste buttons ---
     love() {
       const w = S.watch; if (!w || !S.power) return;
-      showLearn(taste.love(w.video));
+      taste.love(w.video);
       refreshNext();
       SFX.blip(true);
       el.bug.style.filter = 'drop-shadow(0 0 14px #ff2e93)';
@@ -513,7 +521,7 @@
     },
     nope() {
       const w = S.watch; if (!w || !S.power) return;
-      showLearn(taste.nope(w.video));
+      taste.nope(w.video);
       refreshNext();
       SFX.blip(false);
       // the VJ takes the hint
@@ -682,7 +690,7 @@
   });
   $('resetTaste').addEventListener('click', (e) => {
     e.preventDefault();
-    if (confirm('Forget everything the TV has learned about you?')) { taste.reset(); refreshNext(); if (S.guideOpen) App.renderGuide(); showLearn({ tag: 'everything', reason: 'nope' }); }
+    if (confirm('Forget everything the TV has learned about you?')) { taste.reset(); refreshNext(); if (S.guideOpen) App.renderGuide(); }
   });
 
   document.addEventListener('keydown', (e) => {
@@ -738,7 +746,15 @@
   loadState();
   initSchedule();
   // Load the player now, while the set is still off, so pressing POWER can start a video inside the tap itself.
-  Player.init(() => { if (S.power && S.pendingTune) { S.pendingTune = false; App.tune(S.channel, { silent: true }); } });
+  Player.init(() => {
+    if (S.power && S.pendingTune) { S.pendingTune = false; App.tune(S.channel, { silent: true }); return; }
+    // Off: warm up the channel it'll open on, for up to 3 minutes.
+    const ch = byNum(S.channel);
+    const s = ch && sync(ch);
+    if (S.power || !s || !s.now) return;
+    Player.warm(s.now.id, elapsed(ch));
+    timers.warmStop = setTimeout(() => { if (!S.power && Player.warmId) Player.stop(); }, 180000);
+  });
   SFX.setVolume(0.15 + S.volume / 100 * 0.6);
   el.led.className = 'led standby';
   setScreenState('off');
